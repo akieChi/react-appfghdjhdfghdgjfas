@@ -5,11 +5,11 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <script src="https://cdn.tailwindcss.com"></script>
-     <title>NIA UPRIIS Inventory System</title>
+    <title>NIA UPRIIS Inventory System</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
+            background-color: #ffffff;
             margin: 0;
             padding: 0;
         }
@@ -20,7 +20,7 @@
         }
         #main-header {
             background-color: #333;
-            color: #fff;
+            color: #ffffff;
             padding-top: 30px;
             min-height: 70px;
             border-bottom: #0779e4 3px solid;
@@ -49,7 +49,7 @@
         }
         form button {
             display: inline-block;
-            background: #0779e4;
+            background: #19e407;
             color: #fff;
             padding: 10px 20px;
             border: none;
@@ -90,14 +90,17 @@
         <section id="inventory-form">
             <h2>Add Inventory Item</h2>
             <form id="itemForm">
+                <label for="propertyNo">Property No</label>
+                <input type="text" id="propertyNo" name="propertyNo" required>
+
                 <label for="itemName">Item Name</label>
                 <input type="text" id="itemName" name="itemName" required>
 
                 <label for="itemQuantity">Quantity</label>
                 <input type="number" id="itemQuantity" name="itemQuantity" required>
 
-                <label for="itemCategory">Category</label>
-                <input type="text" id="itemCategory" name="itemCategory" required>
+                <label for="itemSection">Section</label>
+                <input type="text" id="itemSection" name="itemSection" required>
 
                 <button type="submit">Add Item</button>
             </form>
@@ -108,9 +111,10 @@
             <table>
                 <thead>
                     <tr>
-                        <th onclick="sortTable(0)">Item Name</th>
-                        <th onclick="sortTable(1)">Quantity</th>
-                        <th onclick="sortTable(2)">Category</th>
+                        <th onclick="sortTable(0)">Property No</th>
+                        <th onclick="sortTable(1)">Item Name</th>
+                        <th onclick="sortTable(2)">Quantity</th>
+                        <th onclick="sortTable(3)">Section</th>
                         <th>QR Code</th>
                         <th>Edit</th>
                         <th>Delete</th>
@@ -125,8 +129,8 @@
         <section id="qr-generator">
             <h2>Generate QR Codes</h2>
             <form id="qrForm">
-                <label for="categoryPrint">Enter Category to Print QR Codes</label>
-                <input type="text" id="categoryPrint" name="categoryPrint">
+                <label for="sectionPrint">Enter Section to Print QR Codes</label>
+                <input type="text" id="sectionPrint" name="sectionPrint">
                 <button type="button" onclick="printMultipleQRCodes()">Print QR Codes</button>
             </form>
         </section>
@@ -143,22 +147,24 @@
         function addItem(event) {
             event.preventDefault();
 
+            const propertyNo = document.getElementById('propertyNo').value;
             const itemName = document.getElementById('itemName').value;
             const itemQuantity = document.getElementById('itemQuantity').value;
-            const itemCategory = document.getElementById('itemCategory').value;
+            const itemSection = document.getElementById('itemSection').value;
 
             const tableBody = document.getElementById('inventoryTableBody');
             const newRow = document.createElement('tr');
 
             let qr = qrcode(0, 'L');
-            qr.addData(`${itemName} - Quantity: ${itemQuantity} - Category: ${itemCategory}`);
+            qr.addData(`Property No: ${propertyNo}, Name: ${itemName}, Quantity: ${itemQuantity}, Section: ${itemSection}`);
             qr.make();
             let qrImg = qr.createImgTag();
 
             newRow.innerHTML = `
+                <td>${propertyNo}</td>
                 <td>${itemName}</td>
                 <td>${itemQuantity}</td>
-                <td>${itemCategory}</td>
+                <td>${itemSection}</td>
                 <td>${qrImg}</td>
                 <td class="actions"><button onclick="editItem(this)">Edit</button></td>
                 <td class="actions"><button onclick="deleteItem(this)">Delete</button></td>
@@ -176,13 +182,15 @@
 
         function editItem(button) {
             const row = button.parentNode.parentNode;
-            const itemName = row.children[0].innerText;
-            const itemQuantity = row.children[1].innerText;
-            const itemCategory = row.children[2].innerText;
+            const propertyNo = row.children[0].innerText;
+            const itemName = row.children[1].innerText;
+            const itemQuantity = row.children[2].innerText;
+            const itemSection = row.children[3].innerText;
 
+            document.getElementById('propertyNo').value = propertyNo;
             document.getElementById('itemName').value = itemName;
             document.getElementById('itemQuantity').value = itemQuantity;
-            document.getElementById('itemCategory').value = itemCategory;
+            document.getElementById('itemSection').value = itemSection;
 
             deleteItem(button);
         }
@@ -201,20 +209,20 @@
         }
 
         function printMultipleQRCodes() {
-            const category = document.getElementById('categoryPrint').value;
+            const section = document.getElementById('sectionPrint').value;
             const rows = document.querySelectorAll('#inventoryTableBody tr');
             let qrContent = '';
 
             rows.forEach(row => {
-                if (row.children[2].innerText === category) {
-                    qrContent += `${row.children[0].innerText} - Quantity: ${row.children[1].innerText} - Category: ${row.children[2].innerText}\n`;
+                if (row.children[3].innerText === section) {
+                    qrContent += `Property No: ${row.children[0].innerText}, Name: ${row.children[1].innerText}, Quantity: ${row.children[2].innerText}, Section: ${row.children[3].innerText}\n`;
                 }
             });
 
             if (qrContent) {
                 printQRCode(qrContent);
             } else {
-                alert('No items found for the specified category.');
+                alert('No items found for the specified section.');
             }
         }
 
