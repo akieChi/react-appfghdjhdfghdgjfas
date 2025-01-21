@@ -211,16 +211,19 @@
         function printMultipleQRCodes() {
             const section = document.getElementById('sectionPrint').value;
             const rows = document.querySelectorAll('#inventoryTableBody tr');
-            let qrContent = '';
+            let qrContentArray = [];
 
             rows.forEach(row => {
                 if (row.children[3].innerText === section) {
-                    qrContent += `Property No: ${row.children[0].innerText}, Name: ${row.children[1].innerText}, Quantity: ${row.children[2].innerText}, Section: ${row.children[3].innerText}\n`;
+                    let qrContent = `Property No: ${row.children[0].innerText}, Name: ${row.children[1].innerText}, Quantity: ${row.children[2].innerText}, Section: ${row.children[3].innerText}`;
+                    qrContentArray.push(qrContent);
                 }
             });
 
-            if (qrContent) {
-                printQRCode(qrContent);
+            if (qrContentArray.length > 0) {
+                qrContentArray.forEach(qrContent => {
+                    printQRCode(qrContent);
+                });
             } else {
                 alert('No items found for the specified section.');
             }
