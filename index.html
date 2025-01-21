@@ -5,13 +5,240 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <script src="https://cdn.tailwindcss.com"></script>
-    <title>Vite + React + TS</title>
-  </head>
-  <body>
-  <!--   <div id="root"></div> -->
-    <h1 class="text-3xl font-bold underline text-center text-blue-500">
-      Hello world!
-    </h1>
+     <title>NIA UPRIIS Inventory System</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            width: 80%;
+            margin: auto;
+            overflow: hidden;
+        }
+        #main-header {
+            background-color: #333;
+            color: #fff;
+            padding-top: 30px;
+            min-height: 70px;
+            border-bottom: #0779e4 3px solid;
+        }
+        #main-header h1 {
+            text-align: center;
+            text-transform: uppercase;
+            margin: 0;
+            font-size: 24px;
+        }
+        form {
+            background: #fff;
+            padding: 20px;
+            margin-top: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        form label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        form input, form select {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+        }
+        form button {
+            display: inline-block;
+            background: #0779e4;
+            color: #fff;
+            padding: 10px 20px;
+            border: none;
+            cursor: pointer;
+        }
+        table {
+            width: 100%;
+            margin-top: 20px;
+            border-collapse: collapse;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #f4f4f4;
+            cursor: pointer;
+        }
+        .actions button {
+            margin-right: 5px;
+        }
+        #qr-code {
+            margin-top: 20px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <header id="main-header">
+        <div class="container">
+            <h1>NIA UPRIIS Inventory System</h1>
+        </div>
+    </header>
+    <div class="container">
+        <section id="inventory-form">
+            <h2>Add Inventory Item</h2>
+            <form id="itemForm">
+                <label for="itemName">Item Name</label>
+                <input type="text" id="itemName" name="itemName" required>
+
+                <label for="itemQuantity">Quantity</label>
+                <input type="number" id="itemQuantity" name="itemQuantity" required>
+
+                <label for="itemCategory">Category</label>
+                <input type="text" id="itemCategory" name="itemCategory" required>
+
+                <button type="submit">Add Item</button>
+            </form>
+        </section>
+
+        <section id="inventory-list">
+            <h2>Inventory List</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th onclick="sortTable(0)">Item Name</th>
+                        <th onclick="sortTable(1)">Quantity</th>
+                        <th onclick="sortTable(2)">Category</th>
+                        <th>QR Code</th>
+                        <th>Edit</th>
+                        <th>Delete</th>
+                    </tr>
+                </thead>
+                <tbody id="inventoryTableBody">
+                    <!-- Inventory items will be added here dynamically -->
+                </tbody>
+            </table>
+        </section>
+
+        <section id="qr-generator">
+            <h2>Generate QR Codes</h2>
+            <form id="qrForm">
+                <label for="categoryPrint">Enter Category to Print QR Codes</label>
+                <input type="text" id="categoryPrint" name="categoryPrint">
+                <button type="button" onclick="printMultipleQRCodes()">Print QR Codes</button>
+            </form>
+        </section>
+
+        <div id="qr-code">
+            <canvas id="qrCanvas" style="display:none;"></canvas>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+    <script>
+        document.getElementById('itemForm').addEventListener('submit', addItem);
+
+        function addItem(event) {
+            event.preventDefault();
+
+            const itemName = document.getElementById('itemName').value;
+            const itemQuantity = document.getElementById('itemQuantity').value;
+            const itemCategory = document.getElementById('itemCategory').value;
+
+            const tableBody = document.getElementById('inventoryTableBody');
+            const newRow = document.createElement('tr');
+
+            let qr = qrcode(0, 'L');
+            qr.addData(`${itemName} - Quantity: ${itemQuantity} - Category: ${itemCategory}`);
+            qr.make();
+            let qrImg = qr.createImgTag();
+
+            newRow.innerHTML = `
+                <td>${itemName}</td>
+                <td>${itemQuantity}</td>
+                <td>${itemCategory}</td>
+                <td>${qrImg}</td>
+                <td class="actions"><button onclick="editItem(this)">Edit</button></td>
+                <td class="actions"><button onclick="deleteItem(this)">Delete</button></td>
+            `;
+
+            tableBody.appendChild(newRow);
+
+            document.getElementById('itemForm').reset();
+        }
+
+        function deleteItem(button) {
+            const row = button.parentNode.parentNode;
+            row.parentNode.removeChild(row);
+        }
+
+        function editItem(button) {
+            const row = button.parentNode.parentNode;
+            const itemName = row.children[0].innerText;
+            const itemQuantity = row.children[1].innerText;
+            const itemCategory = row.children[2].innerText;
+
+            document.getElementById('itemName').value = itemName;
+            document.getElementById('itemQuantity').value = itemQuantity;
+            document.getElementById('itemCategory').value = itemCategory;
+
+            deleteItem(button);
+        }
+
+        function printQRCode(qrContent) {
+            let qr = qrcode(0, 'L');
+            qr.addData(qrContent);
+            qr.make();
+            let qrCanvas = document.getElementById('qrCanvas');
+            qrCanvas.innerHTML = qr.createImgTag();
+
+            let win = window.open();
+            win.document.write(qrCanvas.innerHTML);
+            win.print();
+            win.close();
+        }
+
+        function printMultipleQRCodes() {
+            const category = document.getElementById('categoryPrint').value;
+            const rows = document.querySelectorAll('#inventoryTableBody tr');
+            let qrContent = '';
+
+            rows.forEach(row => {
+                if (row.children[2].innerText === category) {
+                    qrContent += `${row.children[0].innerText} - Quantity: ${row.children[1].innerText} - Category: ${row.children[2].innerText}\n`;
+                }
+            });
+
+            if (qrContent) {
+                printQRCode(qrContent);
+            } else {
+                alert('No items found for the specified category.');
+            }
+        }
+
+        function sortTable(columnIndex) {
+            const table = document.querySelector('table');
+            const tbody = table.tBodies[0];
+            const rows = Array.from(tbody.rows);
+
+            const sortedRows = rows.sort((a, b) => {
+                const aText = a.cells[columnIndex].innerText;
+                const bText = b.cells[columnIndex].innerText;
+
+                return aText.localeCompare(bText);
+            });
+
+            // Remove existing rows
+            while (tbody.firstChild) {
+                tbody.removeChild(tbody.firstChild);
+            }
+
+            // Append sorted rows
+            sortedRows.forEach(row => tbody.appendChild(row));
+        }
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
